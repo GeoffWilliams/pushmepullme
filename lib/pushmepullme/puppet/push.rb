@@ -14,8 +14,6 @@ module PushMePullMe
 
 
       def self.upload_file(baseurl, path)
-        Escort::Logger.output.puts "upload #{path} to #{baseurl}"
-
         # work out a nice place to upload us to. artifactory doesn't care about directories, it uses the metadata to
         # serve the correct file at all times but lets split things up for neatness
         slug = path_to_slug(path)
