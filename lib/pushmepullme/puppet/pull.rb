@@ -18,7 +18,7 @@ module PushMePullMe
       #
       # If this is impossible raise an error...
       def self.puppetfile_to_slug(line)
-        regexp = /^mod\s+('|")([^-]+-[^-]+)('|"),\s+('|")(\d+\.\d+\.\d+)('|")\s*$/
+        regexp = /^mod\s+('|")([^-]+-[^-]+)('|")\s*,\s*('|")(\d+\.\d+\.\d+)('|")\s*$/
 
         if line =~ regexp
           slug = line.gsub(regexp, '\2-\5')
