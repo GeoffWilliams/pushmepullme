@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+require 'escort'
+require 'pushmepullme/version'
+require 'pushmepullme/cmd'
+
+# display help if nothing specified
+ARGV.push('-h') if ARGV.empty?
+
+# Add the path to the puppet-code command as a fallback.  It's last to
+# allow user to override via the real PATH if necessary
+ENV['PATH'] = "#{ENV['PATH']}:/opt/puppetlabs/puppet/bin/:/opt/puppetlabs/client-tools/bin/"
+
+
+Escort::App.create do |app|
+  app.version PushMePullMe::VERSION
+  app.summary "pushmepullme"
+  app.description "Push and Pull stuff the easy way"
+
+  app.command :puppet do |command|
+    command.summary "Puppet"
+    command.description "Do things with puppet"
+
+    command.command :push do |command|
+      command.options do |opts|
+        opts.opt(:baseurl,
+		 'Base URL to upload to (eg Artifactory)',
+	:long => '--baseurl'.
+	:type => :string,
+		)
+      end    
+    end
+
+    command.action do |options, arguments|
+     # PushMePullMe::Cmd::classes(options[:global][:commands][:classes][:options])
+    end
+  end
+
+end
