@@ -56,7 +56,7 @@ module PushMePullMe
 
           if res.code == '201'
             status = 0
-            Escort::Logger.output.puts "created OK"
+            Escort::Logger.output.puts "#{slug} created OK"
           else
             status = 1
             Escort::Logger.error.error "Error uploading: #{res.code}: #{res.body || 'reply was empty'}"
