@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 require 'escort'
 require 'pushmepullme/version'
-require 'pushmepullme/cmd'
+require 'pushmepullme/puppet/pull'
+require 'pushmepullme/puppet/push'
 
 # display help if nothing specified
 ARGV.push('-h') if ARGV.empty?
@@ -14,25 +15,112 @@ ENV['PATH'] = "#{ENV['PATH']}:/opt/puppetlabs/puppet/bin/:/opt/puppetlabs/client
 Escort::App.create do |app|
   app.version PushMePullMe::VERSION
   app.summary "pushmepullme"
-  app.description "Push and Pull stuff the easy way"
+  app.description "Push (upload) and Pull (download) stuff the easy way"
 
   app.command :puppet do |command|
     command.summary "Puppet"
-    command.description "Do things with puppet"
+    command.description "Download modules from public puppet forge and upload to artifactory"
 
-    command.command :push do |command|
-      command.options do |opts|
-        opts.opt(:baseurl,
-		 'Base URL to upload to (eg Artifactory)',
-	:long => '--baseurl'.
-	:type => :string,
-		)
-      end    
+    command.command :push do |sc|
+      sc.summary "Upload files to artifactory"
+      sc.options do |opts|
+        opts.opt(
+          :baseurl,
+          'Base URL to upload to (eg Artifactory)',
+          :long => '--baseurl',
+          :type => :string
+        )
+
+        opts.opt(
+          :file,
+          'Upload an individual file',
+          :long => '--file',
+          :type => :string
+        )
+
+        opts.opt(
+          :dir,
+          'Upload all .tar.gz files in directory',
+          :long => '--dir',
+          :type => :string
+        )
+
+        opts.conflict :file, :dir
+        opts.validate(:file, "file must exist and be a file") {|option| File.file? option}
+        opts.validate(:dir, "dir must exist and be a directory") {|option| File.directory? option}
+
+      end
+      sc.action do |options, arguments|
+        baseurl = options[:global][:commands][:puppet][:commands][:push][:options][:baseurl]
+        dir     = options[:global][:commands][:puppet][:commands][:push][:options][:dir]
+        file    = options[:global][:commands][:puppet][:commands][:push][:options][:file]
+        if baseurl.nil?
+          Escort::Logger.error.error "--baseurl is required"
+          exit_status = 1
+        else
+          if !dir.nil?
+            exit_status = PushMePullMe::Puppet::Push.upload_dir(baseurl, dir)
+          elsif !file.nil?
+            exit_status = PushMePullMe::Puppet::Push.upload_file(baseurl, file)
+          else
+            Escort::Logger.error.error "must specify either --file or --dir"
+            exit_status = 1
+          end
+        end
+        exit exit_status
+      end
+
     end
 
-    command.action do |options, arguments|
-     # PushMePullMe::Cmd::classes(options[:global][:commands][:classes][:options])
+    command.command :pull do |sc|
+      sc.summary "Download from the Puppet Forge"
+      sc.options do |opts|
+        opts.opt(
+          :puppetfile,
+          'Path to a Puppetfile to process',
+          :long => '--puppetfile',
+          :type => :string)
+
+        opts.opt(
+          :module,
+          'Download an individual module eg "puppetlabs-stdlib-4.24.0"',
+          :long => '--module',
+          :type => :string)
+
+        opts.opt(
+          :outputdir,
+          'Save .tar.gz files to this directory',
+          :long    => '--outputdir',
+          :default => 'modules',
+          :type    => :string)
+
+        opts.conflict :puppetfile, :module
+        opts.validate(:puppetfile, "Puppetfile must exist") {|option| File.exists? option}
+        opts.validate(:module, "module must be in the form author-module-version") {|option| option =~ /^[^-]+-[^-]+-\d+\.\d+\.\d+$/}
+      end
+      sc.action do |options, arguments|
+        # module is a reserved word...
+        puppetmodule  = options[:global][:commands][:puppet][:commands][:pull][:options][:module]
+        puppetfile    =  options[:global][:commands][:puppet][:commands][:pull][:options][:puppetfile]
+        output_dir    = options[:global][:commands][:puppet][:commands][:pull][:options][:outputdir]
+
+        if output_dir.nil?
+          Escort::Logger.error.error "--outputdir is required"
+          exit_status = 1
+        else
+          if !puppetmodule.nil?
+            exit_status = PushMePullMe::Puppet::Pull.download_module(output_dir, puppetmodule)
+          elsif !puppetfile.nil?
+            exit_status = PushMePullMe::Puppet::Pull.process_puppetfile(output_dir, puppetfile)
+          else
+            Escort::Logger.error.error "must specify either --module or --puppetfile"
+            exit_status = 1
+          end
+        end
+        exit exit_status
+      end
     end
+
   end
 
 end

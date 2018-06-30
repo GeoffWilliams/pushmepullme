@@ -5,7 +5,7 @@ require "pushmepullme/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "pushmepullme"
-  spec.version       = Pushmepullme::VERSION
+  spec.version       = PushMePullMe::VERSION
   spec.authors       = ["Geoff Williams"]
   spec.email         = ["geoff@geoffwilliams.me.uk"]
 
@@ -23,4 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+
+    spec.add_runtime_dependency "escort", "0.4.0"
+
 end
