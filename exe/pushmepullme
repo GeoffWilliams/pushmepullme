@@ -46,8 +46,8 @@ Escort::App.create do |app|
         )
 
         opts.conflict :file, :dir
-        opts.validate(:file, "file must exist and be a file") {|option| File.file? option}
-        opts.validate(:dir, "dir must exist and be a directory") {|option| File.directory? option}
+        opts.validate(:file, "must exist and be a file") {|option| File.file? option}
+        opts.validate(:dir, "must exist and be a directory") {|option| File.directory? option}
 
       end
       sc.action do |options, arguments|
@@ -95,8 +95,8 @@ Escort::App.create do |app|
           :type    => :string)
 
         opts.conflict :puppetfile, :module
-        opts.validate(:puppetfile, "Puppetfile must exist") {|option| File.exists? option}
-        opts.validate(:module, "module must be in the form author-module-version") {|option| option =~ /^[^-]+-[^-]+-\d+\.\d+\.\d+$/}
+        opts.validate(:puppetfile, "must exist") {|option| File.exists? option}
+        opts.validate(:module, "must be in the form author-module-version") {|option| option =~ /^[^-]+-[^-]+-\d+\.\d+\.\d+$/}
       end
       sc.action do |options, arguments|
         # module is a reserved word...
